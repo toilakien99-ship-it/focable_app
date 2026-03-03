@@ -1,0 +1,54 @@
+{
+  "cli": {
+    "version": ">= 12.0.0",
+    "appVersionSource": "local"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "ios": {
+        "simulator": true
+      },
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://arixwxjlnqtkbzfomoti.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFyaXh3eGpsbnF0a2J6Zm9tb3RpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1MTIzNDEsImV4cCI6MjA4ODA4ODM0MX0.zpg5MEaMiq4Aapqk336VpvXXPigMeI-1veZiyM9-btM"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://arixwxjlnqtkbzfomoti.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFyaXh3eGpsbnF0a2J6Zm9tb3RpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1MTIzNDEsImV4cCI6MjA4ODA4ODM0MX0.zpg5MEaMiq4Aapqk336VpvXXPigMeI-1veZiyM9-btM"
+      }
+    },
+    "production": {
+      "android": {
+        "buildType": "app-bundle"
+      },
+      "ios": {
+        "autoIncrement": true
+      },
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://arixwxjlnqtkbzfomoti.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFyaXh3eGpsbnF0a2J6Zm9tb3RpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1MTIzNDEsImV4cCI6MjA4ODA4ODM0MX0.zpg5MEaMiq4Aapqk336VpvXXPigMeI-1veZiyM9-btM"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "appleId": "YOUR_APPLE_ID@example.com",
+        "ascAppId": "YOUR_APP_STORE_CONNECT_APP_ID",
+        "appleTeamId": "YOUR_APPLE_TEAM_ID"
+      },
+      "android": {
+        "serviceAccountKeyPath": "./google-play-service-account.json",
+        "track": "internal"
+      }
+    }
+  }
+}
