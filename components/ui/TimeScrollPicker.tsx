@@ -1,10 +1,11 @@
-import React, { useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Dimensions } from 'react-native';
+import React, { useRef, useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import { Colors, Typography, Spacing } from '@/lib/theme';
 
 const ITEM_HEIGHT = 44;
 const VISIBLE_ITEMS = 5;
 const PICKER_HEIGHT = ITEM_HEIGHT * VISIBLE_ITEMS;
+const PADDING_ITEMS = Math.floor(VISIBLE_ITEMS / 2);
 
 interface ScrollPickerColumnProps {
   items: string[];
@@ -15,43 +16,82 @@ interface ScrollPickerColumnProps {
 
 function ScrollPickerColumn({ items, selectedIndex, onSelect, label }: ScrollPickerColumnProps) {
   const scrollRef = useRef<ScrollView>(null);
-  const paddedItems = ['', '', ...items, '', ''];
+  const isScrolling = useRef(false);
 
-  useEffect(() => {
-    const offset = selectedIndex * ITEM_HEIGHT;
-    scrollRef.current?.scrollTo({ y: offset, animated: false });
+  const snapToIndex = useCallback((index: number, animated = true) => {
+    const clamped = Math.max(0, Math.min(index, items.length - 1));
+    scrollRef.current?.scrollTo({ y: clamped * ITEM_HEIGHT, animated });
+    return clamped;
+  }, [items.length]);
+
+  const handleRef = useCallback((ref: ScrollView | null) => {
+    (scrollRef as any).current = ref;
+    if (ref) {
+      setTimeout(() => {
+        ref.scrollTo({ y: selectedIndex * ITEM_HEIGHT, animated: false });
+      }, 50);
+    }
   }, [selectedIndex]);
 
-  function handleScrollEnd(e: any) {
+  const handleScrollEnd = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    isScrolling.current = false;
     const y = e.nativeEvent.contentOffset.y;
-    const index = Math.round(y / ITEM_HEIGHT);
-    const clamped = Math.max(0, Math.min(index, items.length - 1));
+    const rawIndex = y / ITEM_HEIGHT;
+    const snapped = Math.round(rawIndex);
+    const clamped = Math.max(0, Math.min(snapped, items.length - 1));
+    snapToIndex(clamped, true);
     if (clamped !== selectedIndex) {
       onSelect(clamped);
     }
-    scrollRef.current?.scrollTo({ y: clamped * ITEM_HEIGHT, animated: true });
-  }
+  }, [items.length, selectedIndex, onSelect, snapToIndex]);
+
+  const handleScrollBegin = useCallback(() => {
+    isScrolling.current = true;
+  }, []);
+
+  const paddedItems = [
+    ...Array(PADDING_ITEMS).fill(''),
+    ...items,
+    ...Array(PADDING_ITEMS).fill(''),
+  ];
 
   return (
     <View style={styles.column}>
       {label ? <Text style={styles.columnLabel}>{label}</Text> : null}
       <View style={styles.columnInner}>
         <View style={styles.selectionOverlay} pointerEvents="none" />
+        <View style={styles.topFade} pointerEvents="none" />
+        <View style={styles.bottomFade} pointerEvents="none" />
         <ScrollView
-          ref={scrollRef}
+          ref={handleRef}
           showsVerticalScrollIndicator={false}
           snapToInterval={ITEM_HEIGHT}
           decelerationRate="fast"
+          scrollEventThrottle={16}
+          onScrollBeginDrag={handleScrollBegin}
           onMomentumScrollEnd={handleScrollEnd}
-          contentContainerStyle={{ paddingVertical: ITEM_HEIGHT * 2 }}
+          onScrollEndDrag={handleScrollEnd}
+          contentContainerStyle={{ paddingVertical: 0 }}
+          bounces={false}
+          overScrollMode="never"
         >
-          {items.map((item, idx) => (
-            <View key={idx} style={styles.item}>
-              <Text style={[styles.itemText, idx === selectedIndex && styles.itemTextSelected]}>
-                {item}
-              </Text>
-            </View>
-          ))}
+          {paddedItems.map((item, idx) => {
+            const realIdx = idx - PADDING_ITEMS;
+            const isSelected = realIdx === selectedIndex;
+            const distance = Math.abs(realIdx - selectedIndex);
+            const opacity = item === '' ? 0 : distance === 0 ? 1 : distance === 1 ? 0.6 : 0.3;
+            return (
+              <View key={idx} style={styles.item}>
+                <Text style={[
+                  styles.itemText,
+                  isSelected && styles.itemTextSelected,
+                  { opacity },
+                ]}>
+                  {item}
+                </Text>
+              </View>
+            );
+          })}
         </ScrollView>
       </View>
     </View>
@@ -172,15 +212,34 @@ const styles = StyleSheet.create({
   },
   selectionOverlay: {
     position: 'absolute',
-    top: ITEM_HEIGHT * 2,
-    left: 0,
-    right: 0,
+    top: ITEM_HEIGHT * PADDING_ITEMS,
+    left: 4,
+    right: 4,
     height: ITEM_HEIGHT,
     borderTopWidth: 1.5,
     borderBottomWidth: 1.5,
     borderColor: Colors.primary,
     backgroundColor: Colors.primary + '12',
     zIndex: 1,
+    borderRadius: 8,
+  },
+  topFade: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: ITEM_HEIGHT * PADDING_ITEMS,
+    zIndex: 2,
+    pointerEvents: 'none',
+  },
+  bottomFade: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: ITEM_HEIGHT * PADDING_ITEMS,
+    zIndex: 2,
+    pointerEvents: 'none',
   },
   item: {
     height: ITEM_HEIGHT,
